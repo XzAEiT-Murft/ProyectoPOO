@@ -1,0 +1,39 @@
+/* Estilo para HospitalView */
+
+/* Fondo general */
+.root {
+    -fx-background-color: #ffffff;
+    -fx-font-family: "Segoe UI", sans-serif;
+}
+
+/* Botones */
+.button {
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-padding: 8px 16px;
+    -fx-background-radius: 6px;
+}
+
+.button:hover {
+    -fx-background-color: #2980b9;
+}
+
+/* Tabla */
+.table-view {
+    -fx-border-color: #dcdcdc;
+    -fx-border-radius: 5px;
+    -fx-background-color: #f2f2f2;
+}
+
+/* Columnas */
+.table-column {
+    -fx-font-weight: bold;
+}
+
+/* Entradas */
+.text-field {
+    -fx-padding: 5px;
+    -fx-background-radius: 5px;
+    -fx-border-color: #ccc;
+}
