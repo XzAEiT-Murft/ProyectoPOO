@@ -19,7 +19,7 @@ public class MainView {
     public static void mostrar(Stage stage) {
         // 🔘 Botones principales del menú
         Button btnHospitales = new Button("Gestionar Hospitales");
-        Button btnPacientes = new Button("Gestionar Pacientes");
+         Button btnPacientes = new Button("Gestionar Pacientes");
         Button btnSalir = new Button("Salir");
 
         // 🎯 Acciones al hacer clic
@@ -44,7 +44,7 @@ public class MainView {
         layout.setAlignment(Pos.CENTER);
         layout.setPadding(new Insets(20));
 
-        Scene scene = new Scene(layout, 400, 200);
+        Scene scene = new Scene(layout, 800, 600);
 
         // 🎨 Aplicación del estilo CSS
         scene.getStylesheets().add(MainView.class.getResource("/styles/main.css").toExternalForm());
@@ -52,6 +52,7 @@ public class MainView {
         // ⚙️ Configuración de la ventana
         stage.setScene(scene);
         stage.setTitle("Sistema de Hospitales");
+        stage.setMaximized(true);
         stage.show();
     }
 }

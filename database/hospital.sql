@@ -1,3 +1,6 @@
+DROP DATABASE IF EXISTS HospitalDB;
+GO
+
 -- Crear base de datos para SQL Server
 CREATE DATABASE HospitalDB;
 GO

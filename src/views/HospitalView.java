@@ -37,6 +37,13 @@ public class HospitalView {
         TextField txtTelefono = new TextField();
         txtTelefono.setPromptText("Teléfono");
 
+        // Barra y filtros de búsqueda
+        TextField txtBusqueda = new TextField();
+        txtBusqueda.setPromptText("Buscar...");
+        ComboBox<String> cmbFiltro = new ComboBox<>();
+        cmbFiltro.getItems().addAll("Nombre", "Dirección", "Teléfono");
+        cmbFiltro.setValue("Nombre");
+
         // Checkbox para mostrar solo activos
         CheckBox chkSoloActivos = new CheckBox("Mostrar solo activos");
         chkSoloActivos.setSelected(false); // Mostrar todos por defecto
@@ -44,9 +51,9 @@ public class HospitalView {
         // Botones
         Button btnAgregar = new Button("Agregar");
         Button btnEliminar = new Button("Eliminar");
+        Button btnEditar = new Button("Editar");
         Button btnBaja = new Button("Dar de Baja");
         Button btnReactivar = new Button("Reactivar");
-        Button btnBuscar = new Button("Buscar");
         Button btnRegresar = new Button("Regresar");
 
         // Cargar hospitales desde la base de datos al iniciar
@@ -57,9 +64,16 @@ public class HospitalView {
         tabla.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         tabla.setItems(hospitales);
 
-        TableColumn<Hospital, Integer> colId = new TableColumn<>("ID");
-        colId.setCellValueFactory(new PropertyValueFactory<>("id"));
+        // Llenar campos al seleccionar un registro
+        tabla.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
+            if (newSel != null) {
+                txtNombre.setText(newSel.getNombre());
+                txtDireccion.setText(newSel.getDireccion());
+                txtTelefono.setText(newSel.getTelefono());
+            }
+        });
 
+        
         TableColumn<Hospital, String> colNombre = new TableColumn<>("Nombre");
         colNombre.setCellValueFactory(new PropertyValueFactory<>("nombre"));
 
@@ -72,16 +86,27 @@ public class HospitalView {
         TableColumn<Hospital, LocalDate> colFechaAlta = new TableColumn<>("Fecha de Alta");
         colFechaAlta.setCellValueFactory(new PropertyValueFactory<>("fechaAlta"));
 
-        TableColumn<Hospital, Boolean> colActivo = new TableColumn<>("Activo");
-        colActivo.setCellValueFactory(new PropertyValueFactory<>("activo"));
+        TableColumn<Hospital, Boolean> colEstado = new TableColumn<>("Estado");
+        colEstado.setCellValueFactory(new PropertyValueFactory<>("activo"));
+        colEstado.setCellFactory(col -> new TableCell<Hospital, Boolean>() {
+            @Override
+            protected void updateItem(Boolean item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item ? "Activo" : "Baja");
+                }
+            }
+        });
 
-        tabla.getColumns().addAll(colId, colNombre, colDireccion, colTelefono, colFechaAlta, colActivo);
+        tabla.getColumns().addAll(colNombre, colDireccion, colTelefono, colFechaAlta, colEstado);
 
         // Funciones
 
         btnAgregar.setOnAction(e -> {
             Hospital h = new Hospital(
-                    txtNombre.getText(),
+                    txtNombre.getText().trim(),
                     txtDireccion.getText(),
                     txtTelefono.getText()
             );
@@ -90,10 +115,34 @@ public class HospitalView {
                 mostrarAlerta("Error de validación", error);
                 return;
             }
+            if (controller.existePorNombre(txtNombre.getText().trim())) {
+                mostrarAlerta("Duplicado", "Ya existe un hospital con ese nombre.");
+                return;
+            }
             controller.crearHospital(h); // Guarda en BD
             limpiarCampos(txtNombre, txtDireccion, txtTelefono);
             recargarHospitalesDesdeBD();
-            actualizarTabla(tabla, chkSoloActivos.isSelected(), "");
+            actualizarTabla(tabla, chkSoloActivos.isSelected(), txtBusqueda.getText(), cmbFiltro.getValue());
+        });
+
+        btnEditar.setOnAction(e -> {
+            Hospital seleccionado = tabla.getSelectionModel().getSelectedItem();
+            if (seleccionado == null) {
+                mostrarAlerta("Sin selección", "Selecciona un hospital para editar.");
+                return;
+            }
+            seleccionado.setNombre(txtNombre.getText());
+            seleccionado.setDireccion(txtDireccion.getText());
+            seleccionado.setTelefono(txtTelefono.getText());
+            String error = HospitalValidator.validar(seleccionado);
+            if (error != null && !error.isEmpty()) {
+                mostrarAlerta("Error de validación", error);
+                return;
+            }
+            controller.actualizarHospital(seleccionado);
+            limpiarCampos(txtNombre, txtDireccion, txtTelefono);
+            recargarHospitalesDesdeBD();
+            actualizarTabla(tabla, chkSoloActivos.isSelected(), txtBusqueda.getText(), cmbFiltro.getValue());
         });
 
         btnEliminar.setOnAction(e -> {
@@ -102,9 +151,12 @@ public class HospitalView {
                 mostrarAlerta("Sin selección", "Selecciona al menos un hospital para eliminar.");
                 return;
             }
-            controller.eliminarHospitales(seleccionados); // Borra en la BD
+            boolean exito = controller.eliminarHospitales(seleccionados); // Borra en la BD
+            if (!exito) {
+                mostrarAlerta("Error", "No se puede eliminar el hospital porque tiene registros asociados.");
+            }
             recargarHospitalesDesdeBD();
-            actualizarTabla(tabla, chkSoloActivos.isSelected(), txtNombre.getText());
+            actualizarTabla(tabla, chkSoloActivos.isSelected(), txtBusqueda.getText(), cmbFiltro.getValue());
         });
 
         btnBaja.setOnAction(e -> {
@@ -118,7 +170,7 @@ public class HospitalView {
                 controller.actualizarHospital(h);
             }
             recargarHospitalesDesdeBD();
-            actualizarTabla(tabla, chkSoloActivos.isSelected(), txtNombre.getText());
+            actualizarTabla(tabla, chkSoloActivos.isSelected(), txtBusqueda.getText(), cmbFiltro.getValue());
         });
 
         btnReactivar.setOnAction(e -> {
@@ -132,40 +184,66 @@ public class HospitalView {
                 controller.actualizarHospital(h);
             }
             recargarHospitalesDesdeBD();
-            actualizarTabla(tabla, chkSoloActivos.isSelected(), txtNombre.getText());
+            actualizarTabla(tabla, chkSoloActivos.isSelected(), txtBusqueda.getText(), cmbFiltro.getValue());
         });
 
-        btnBuscar.setOnAction(e -> {
-            actualizarTabla(tabla, chkSoloActivos.isSelected(), txtNombre.getText());
+
+        // Búsqueda en tiempo real
+        txtBusqueda.textProperty().addListener((obs, oldVal, newVal) -> {
+            actualizarTabla(tabla, chkSoloActivos.isSelected(), newVal, cmbFiltro.getValue());
+        });
+
+        cmbFiltro.setOnAction(e -> {
+            actualizarTabla(tabla, chkSoloActivos.isSelected(), txtBusqueda.getText(), cmbFiltro.getValue());
         });
 
         chkSoloActivos.setOnAction(e -> {
-            actualizarTabla(tabla, chkSoloActivos.isSelected(), txtNombre.getText());
+            actualizarTabla(tabla, chkSoloActivos.isSelected(), txtBusqueda.getText(), cmbFiltro.getValue());
         });
 
         btnRegresar.setOnAction(e -> MainView.mostrar(stage));
 
         // Layout
-        VBox campos = new VBox(10, txtNombre, txtDireccion, txtTelefono, chkSoloActivos);
-        HBox botones = new HBox(10, btnAgregar, btnBaja, btnReactivar, btnEliminar, btnBuscar, btnRegresar);
+        HBox menuBusqueda = new HBox(10, txtBusqueda, cmbFiltro);
+        menuBusqueda.setAlignment(Pos.CENTER_LEFT);
+
+        VBox campos = new VBox(10, txtNombre, txtDireccion, txtTelefono, chkSoloActivos, menuBusqueda);
+        HBox botones = new HBox(10, btnAgregar, btnEditar, btnBaja, btnReactivar, btnEliminar, btnRegresar);
         VBox contenedor = new VBox(15, campos, botones, tabla);
         contenedor.setPadding(new Insets(20));
         contenedor.setAlignment(Pos.CENTER);
 
-        Scene scene = new Scene(contenedor, 800, 500);
+        Scene scene = new Scene(contenedor, 1000, 700);
         scene.getStylesheets().add(HospitalView.class.getResource("/styles/hospital.css").toExternalForm());
 
         stage.setTitle("Gestión de Hospitales");
         stage.setScene(scene);
+        stage.setMaximized(true);
         stage.show();
     }
 
-    private static void actualizarTabla(TableView<Hospital> tabla, boolean soloActivos, String filtro) {
+    private static void actualizarTabla(TableView<Hospital> tabla,
+                                         boolean soloActivos,
+                                         String textoBusqueda,
+                                         String campo) {
+        String filtro = textoBusqueda == null ? "" : textoBusqueda.toLowerCase();
+
         List<Hospital> filtrados = hospitales.stream()
                 .filter(h -> (!soloActivos || h.isActivo()))
-                .filter(h -> h.getNombre().toLowerCase().contains(filtro.toLowerCase()))
+                .filter(h -> {
+                    if (filtro.isEmpty()) return true;
+                    switch (campo) {
+                        case "Dirección":
+                            return h.getDireccion().toLowerCase().contains(filtro);
+                        case "Teléfono":
+                            return h.getTelefono().toLowerCase().contains(filtro);
+                        default:
+                            return h.getNombre().toLowerCase().contains(filtro);
+                    }
+                })
                 .sorted((a, b) -> a.getNombre().compareToIgnoreCase(b.getNombre()))
                 .collect(Collectors.toList());
+
         tabla.setItems(FXCollections.observableArrayList(filtrados));
     }
 

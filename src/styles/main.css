@@ -1,11 +1,8 @@
-/* =======================
-   ESTILO PARA MainView.java
-   ======================= */
-
-/* Fondo general de la pantalla */
+/* Fondo con degradado suave */
 .root {
-    -fx-background-color: #f9f9f9;
+    -fx-background-color: linear-gradient(to bottom, #e0f7fa, #ffffff);
     -fx-font-family: "Segoe UI", sans-serif;
+    -fx-font-size: 14px;
 }
 
 /* Estilo para todos los botones */
@@ -25,6 +22,6 @@
 
 /* VBox central */
 .vbox {
-    -fx-spacing: 15px;
+    -fx-spacing: 20px;
     -fx-alignment: center;
 }

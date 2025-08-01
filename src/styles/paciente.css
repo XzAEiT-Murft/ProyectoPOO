@@ -1,7 +1,6 @@
-/* === Estilo general de la aplicación === */
 .root {
     -fx-font-family: 'Segoe UI', sans-serif;
-    -fx-background-color: #f4f4f4;
+    -fx-background-color: linear-gradient(to bottom, #fdfbfb, #ebedee);
 }
 
 /* === Tabla === */
@@ -18,7 +17,7 @@
 
 /* === Botones === */
 .button {
-    -fx-background-color: #4CAF50;
+    -fx-background-color: #4caf50;
     -fx-text-fill: white;
     -fx-padding: 6px 12px;
     -fx-background-radius: 4;

@@ -1,61 +1,93 @@
 package views;
 
 import controllers.PacienteValidator;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.EntityTransaction;
-import jakarta.persistence.TypedQuery;
+import controllers.PacienteController;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import models.Hospital;
 import models.Paciente;
-import utils.JPAUtil;
+import java.util.List;
+import java.util.stream.Collectors;
+
 
 public class PacienteView {
 
+    private static final ObservableList<Paciente> pacientes = FXCollections.observableArrayList();
+    private static final PacienteController controller = new PacienteController();
+
     public static void mostrar(Stage stage, ObservableList<Hospital> hospitales) {
-        // Formulario
-        Label lblNombre = new Label("Nombre:");
+        // Campos de entrada
         TextField txtNombre = new TextField();
+        txtNombre.setPromptText("Nombre");
 
-        Label lblApellido1 = new Label("Primer Apellido:");
         TextField txtApellido1 = new TextField();
+        txtApellido1.setPromptText("Primer Apellido");
 
-        Label lblApellido2 = new Label("Segundo Apellido:");
         TextField txtApellido2 = new TextField();
+        txtApellido2.setPromptText("Segundo Apellido");
 
-        Label lblEdad = new Label("Edad:");
         TextField txtEdad = new TextField();
+        txtEdad.setPromptText("Edad");
 
-        Label lblHospital = new Label("Hospital:");
-        ComboBox<Hospital> comboHospital = new ComboBox<>(hospitales);
-        comboHospital.setPromptText("Selecciona un hospital");
+        ComboBox<String> cmbGenero = new ComboBox<>();
+        cmbGenero.getItems().addAll("Masculino", "Femenino", "Otro");
+        cmbGenero.setPromptText("Género");
 
-        Label lblGenero = new Label("Género:");
-        ComboBox<String> comboGenero = new ComboBox<>();
-        comboGenero.getItems().addAll("Masculino", "Femenino", "Otro");
-        comboGenero.setPromptText("Selecciona un género");
+        ComboBox<Hospital> cmbHospital = new ComboBox<>(hospitales);
+        cmbHospital.setPromptText("Hospital");
+
+        // Barra de búsqueda y filtros
+        TextField txtBusqueda = new TextField();
+        txtBusqueda.setPromptText("Buscar...");
+        ComboBox<String> cmbFiltro = new ComboBox<>();
+        cmbFiltro.getItems().addAll("Nombre", "Apellido", "Hospital");
+        cmbFiltro.setValue("Nombre");
+
+        CheckBox chkSoloActivos = new CheckBox("Mostrar solo activos");
 
         Label lblMensaje = new Label();
 
-        Button btnGuardar = new Button("Guardar");
+        Button btnAgregar = new Button("Agregar");
+        Button btnEditar = new Button("Editar");
+        Button btnBaja = new Button("Dar de Baja");
+        Button btnReactivar = new Button("Reactivar");
+        Button btnEliminar = new Button("Eliminar");
         Button btnRegresar = new Button("Regresar");
 
-        // Tabla de pacientes
-        TableView<Paciente> tablaPacientes = new TableView<>();
-        ObservableList<Paciente> listaPacientes = FXCollections.observableArrayList();
-        cargarPacientesDesdeBD(listaPacientes);
+        // Datos
+        recargarPacientesDesdeBD();
 
-        TableColumn<Paciente, String> colNombre = new TableColumn<>("Nombre");
-        colNombre.setCellValueFactory(new PropertyValueFactory<>("nombrePila"));
+        TableView<Paciente> tabla = new TableView<>();
+        tabla.setItems(pacientes);
+        tabla.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
-        TableColumn<Paciente, String> colApellido1 = new TableColumn<>("Apellido P.");
-        colApellido1.setCellValueFactory(new PropertyValueFactory<>("apellido1"));
+        tabla.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
+            if (newSel != null) {
+                txtNombre.setText(newSel.getNombrePila());
+                txtApellido1.setText(newSel.getApellido1());
+                txtApellido2.setText(newSel.getApellido2());
+                txtEdad.setText(String.valueOf(newSel.getEdad()));
+                cmbGenero.setValue(newSel.getGenero());
+                cmbHospital.setValue(newSel.getHospital());
+            }
+        });
+
+        TableColumn<Paciente, String> colNombre = new TableColumn<>("Nombre Completo");
+        colNombre.setCellValueFactory(p -> new SimpleStringProperty(
+                p.getValue().getNombrePila() + " " + p.getValue().getApellido1() +
+                        (p.getValue().getApellido2() != null && !p.getValue().getApellido2().isEmpty() ? " " + p.getValue().getApellido2() : "")));
+
+        TableColumn<Paciente, String> colHospital = new TableColumn<>("Hospital");
+        colHospital.setCellValueFactory(p -> new SimpleStringProperty(p.getValue().getHospital().getNombre()));
 
         TableColumn<Paciente, Integer> colEdad = new TableColumn<>("Edad");
         colEdad.setCellValueFactory(new PropertyValueFactory<>("edad"));
@@ -63,81 +95,172 @@ public class PacienteView {
         TableColumn<Paciente, String> colGenero = new TableColumn<>("Género");
         colGenero.setCellValueFactory(new PropertyValueFactory<>("genero"));
 
-        tablaPacientes.getColumns().addAll(colNombre, colApellido1, colEdad, colGenero);
-        tablaPacientes.setItems(listaPacientes);
-        tablaPacientes.setPrefHeight(200);
-
-        // Botón guardar
-        btnGuardar.setOnAction(e -> {
-            String nombre = txtNombre.getText();
-            String apellido1 = txtApellido1.getText();
-            String apellido2 = txtApellido2.getText();
-            String genero = comboGenero.getValue();
-            String edadTexto = txtEdad.getText();
-
-            int edad;
-            try {
-                edad = Integer.parseInt(edadTexto);
-            } catch (NumberFormatException ex) {
-                lblMensaje.setText("Edad inválida.");
-                return;
-            }
-
-            Hospital hospital = comboHospital.getValue();
-            if (hospital == null) {
-                lblMensaje.setText("Selecciona un hospital.");
-                return;
-            }
-
-            Paciente paciente = new Paciente(nombre, apellido1, apellido2, edad, genero, hospital);
-
-            EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
-            EntityTransaction tx = em.getTransaction();
-            try {
-                tx.begin();
-                em.persist(paciente);
-                tx.commit();
-                lblMensaje.setText("Paciente registrado correctamente.");
-                listaPacientes.add(paciente); // Agregar a la tabla
-            } catch (Exception ex) {
-                if (tx.isActive()) tx.rollback();
-                lblMensaje.setText("Error al registrar: " + ex.getMessage());
-            } finally {
-                em.close();
+        TableColumn<Paciente, Boolean> colEstado = new TableColumn<>("Estado");
+        colEstado.setCellValueFactory(new PropertyValueFactory<>("activo"));
+        colEstado.setCellFactory(col -> new TableCell<Paciente, Boolean>() {
+            @Override
+            protected void updateItem(Boolean item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(item ? "Activo" : "Baja");
+                }
             }
         });
 
+        tabla.getColumns().addAll(colNombre, colHospital, colEdad, colGenero, colEstado);
+
+        // Acciones
+        btnAgregar.setOnAction(e -> {
+            if (!PacienteValidator.validar(txtNombre.getText(), txtApellido1.getText(), txtApellido2.getText(),
+                    txtEdad.getText(), cmbGenero.getValue(), cmbHospital.getValue())) {
+                return;
+            }
+            int edad = Integer.parseInt(txtEdad.getText());
+            Paciente p = new Paciente(txtNombre.getText().trim(), txtApellido1.getText().trim(),
+                    txtApellido2.getText().trim(), edad, cmbGenero.getValue(), cmbHospital.getValue());
+            controller.crearPaciente(p);
+            limpiarCampos(txtNombre, txtApellido1, txtApellido2, txtEdad);
+            cmbGenero.setValue(null);
+            cmbHospital.setValue(null);
+            recargarPacientesDesdeBD();
+            actualizarTabla(tabla, chkSoloActivos.isSelected(), txtBusqueda.getText(), cmbFiltro.getValue());
+            lblMensaje.setText("Paciente registrado correctamente.");
+        });
+
+        btnEditar.setOnAction(e -> {
+            Paciente sel = tabla.getSelectionModel().getSelectedItem();
+            if (sel == null) {
+                mostrarAlerta("Sin selección", "Selecciona un paciente para editar.");
+                return;
+            }
+            if (!PacienteValidator.validar(txtNombre.getText(), txtApellido1.getText(), txtApellido2.getText(),
+                    txtEdad.getText(), cmbGenero.getValue(), cmbHospital.getValue())) {
+                return;
+            }
+            sel.setNombrePila(txtNombre.getText());
+            sel.setApellido1(txtApellido1.getText());
+            sel.setApellido2(txtApellido2.getText());
+            sel.setEdad(Integer.parseInt(txtEdad.getText()));
+            sel.setGenero(cmbGenero.getValue());
+            sel.setHospital(cmbHospital.getValue());
+            controller.actualizarPaciente(sel);
+            limpiarCampos(txtNombre, txtApellido1, txtApellido2, txtEdad);
+            cmbGenero.setValue(null);
+            cmbHospital.setValue(null);
+            recargarPacientesDesdeBD();
+            actualizarTabla(tabla, chkSoloActivos.isSelected(), txtBusqueda.getText(), cmbFiltro.getValue());
+        });
+
+        btnEliminar.setOnAction(e -> {
+            List<Paciente> seleccionados = tabla.getSelectionModel().getSelectedItems();
+            if (seleccionados.isEmpty()) {
+                mostrarAlerta("Sin selección", "Selecciona al menos un paciente para eliminar.");
+                return;
+            }
+            controller.eliminarPacientes(seleccionados);
+            recargarPacientesDesdeBD();
+            actualizarTabla(tabla, chkSoloActivos.isSelected(), txtBusqueda.getText(), cmbFiltro.getValue());
+        });
+
+        btnBaja.setOnAction(e -> {
+            List<Paciente> seleccionados = tabla.getSelectionModel().getSelectedItems();
+            if (seleccionados.isEmpty()) {
+                mostrarAlerta("Sin selección", "Selecciona al menos un paciente para dar de baja.");
+                return;
+            }
+            for (Paciente p : seleccionados) {
+                p.setActivo(false);
+                controller.actualizarPaciente(p);
+            }
+            recargarPacientesDesdeBD();
+            actualizarTabla(tabla, chkSoloActivos.isSelected(), txtBusqueda.getText(), cmbFiltro.getValue());
+        });
+
+        btnReactivar.setOnAction(e -> {
+            List<Paciente> seleccionados = tabla.getSelectionModel().getSelectedItems();
+            if (seleccionados.isEmpty()) {
+                mostrarAlerta("Sin selección", "Selecciona al menos un paciente para reactivar.");
+                return;
+            }
+            for (Paciente p : seleccionados) {
+                p.setActivo(true);
+                controller.actualizarPaciente(p);
+            }
+            recargarPacientesDesdeBD();
+            actualizarTabla(tabla, chkSoloActivos.isSelected(), txtBusqueda.getText(), cmbFiltro.getValue());
+        });
+
+        // Búsqueda
+        txtBusqueda.textProperty().addListener((obs, oldVal, newVal) ->
+                actualizarTabla(tabla, chkSoloActivos.isSelected(), newVal, cmbFiltro.getValue()));
+
+        cmbFiltro.setOnAction(e -> actualizarTabla(tabla, chkSoloActivos.isSelected(), txtBusqueda.getText(), cmbFiltro.getValue()));
+
+        chkSoloActivos.setOnAction(e -> actualizarTabla(tabla, chkSoloActivos.isSelected(), txtBusqueda.getText(), cmbFiltro.getValue()));
+
         btnRegresar.setOnAction(e -> MainView.mostrar(stage));
 
-        VBox root = new VBox(10,
-                lblNombre, txtNombre,
-                lblApellido1, txtApellido1,
-                lblApellido2, txtApellido2,
-                lblEdad, txtEdad,
-                lblGenero, comboGenero,
-                lblHospital, comboHospital,
-                btnGuardar, btnRegresar,
-                lblMensaje,
-                new Label("Pacientes registrados:"),
-                tablaPacientes
-        );
-        root.setPadding(new Insets(20));
-        root.getStyleClass().add("formulario");
+        HBox menuBusqueda = new HBox(10, txtBusqueda, cmbFiltro);
+        menuBusqueda.setAlignment(Pos.CENTER_LEFT);
 
-        Scene scene = new Scene(root, 500, 800);
+        VBox campos = new VBox(10, txtNombre, txtApellido1, txtApellido2, txtEdad, cmbGenero, cmbHospital, chkSoloActivos, menuBusqueda);
+        HBox botones = new HBox(10, btnAgregar, btnEditar, btnBaja, btnReactivar, btnEliminar, btnRegresar);
+        VBox root = new VBox(15, campos, botones, lblMensaje, tabla);
+        root.setPadding(new Insets(20));
+
+        Scene scene = new Scene(root, 1000, 700);
         scene.getStylesheets().add(PacienteView.class.getResource("/styles/paciente.css").toExternalForm());
 
         stage.setScene(scene);
-        stage.setTitle("Registrar Paciente");
+        stage.setTitle("Gestión de Pacientes");
+        stage.setMaximized(true);
+        stage.show();
     }
 
-    private static void cargarPacientesDesdeBD(ObservableList<Paciente> lista) {
-        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
-        try {
-            TypedQuery<Paciente> query = em.createQuery("SELECT p FROM Paciente p", Paciente.class);
-            lista.setAll(query.getResultList());
-        } finally {
-            em.close();
+    private static void actualizarTabla(TableView<Paciente> tabla,
+                                         boolean soloActivos,
+                                         String textoBusqueda,
+                                         String campo) {
+        String filtro = textoBusqueda == null ? "" : textoBusqueda.toLowerCase();
+
+        List<Paciente> filtrados = pacientes.stream()
+                .filter(p -> (!soloActivos || p.isActivo()))
+                .filter(p -> {
+                    if (filtro.isEmpty()) return true;
+                    switch (campo) {
+                        case "Apellido":
+                            return p.getApellido1().toLowerCase().contains(filtro) ||
+                                   (p.getApellido2() != null && p.getApellido2().toLowerCase().contains(filtro));
+                        case "Hospital":
+                            return p.getHospital().getNombre().toLowerCase().contains(filtro);
+                        default:
+                            return p.getNombrePila().toLowerCase().contains(filtro);
+                    }
+                })
+                .sorted((a, b) -> a.getNombrePila().compareToIgnoreCase(b.getNombrePila()))
+                .collect(Collectors.toList());
+
+        tabla.setItems(FXCollections.observableArrayList(filtrados));
+    }
+
+    private static void limpiarCampos(TextField... campos) {
+        for (TextField c : campos) {
+            c.clear();
         }
+    }
+
+    private static void mostrarAlerta(String titulo, String mensaje) {
+        Alert alerta = new Alert(Alert.AlertType.WARNING);
+        alerta.setTitle(titulo);
+        alerta.setHeaderText(null);
+        alerta.setContentText(mensaje);
+        alerta.showAndWait();
+    }
+
+    private static void recargarPacientesDesdeBD() {
+        pacientes.clear();
+        pacientes.addAll(controller.obtenerTodos());
     }
 }

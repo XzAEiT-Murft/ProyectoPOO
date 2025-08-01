@@ -38,7 +38,7 @@ public class HospitalController {
         }
     }
 
-    public void eliminarHospitales(List<Hospital> lista) {
+    public boolean eliminarHospitales(List<Hospital> lista) {
         EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
         EntityTransaction tx = em.getTransaction();
         try {
@@ -48,9 +48,11 @@ public class HospitalController {
                 if (h != null) em.remove(h);
             }
             tx.commit();
+            return true;
         } catch (Exception e) {
             if (tx.isActive()) tx.rollback();
             e.printStackTrace();
+            return false;
         } finally {
             em.close();
         }
@@ -71,4 +73,17 @@ public class HospitalController {
         return lista;
     }
 
+    public boolean existePorNombre(String nombre) {
+        EntityManager em = JPAUtil.getEntityManagerFactory().createEntityManager();
+        try {
+            Long count = em.createQuery(
+                    "SELECT COUNT(h) FROM Hospital h WHERE LOWER(h.nombre) = :nom",
+                    Long.class)
+                .setParameter("nom", nombre.toLowerCase())
+                .getSingleResult();
+            return count > 0;
+        } finally {
+            em.close();
+        }
+    }
 }
