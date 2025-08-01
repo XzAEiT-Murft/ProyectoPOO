@@ -1,18 +1,92 @@
-## Getting Started
+# 🏥 Proyecto de Gestión Hospitalaria - POO
 
-Welcome to the VS Code Java world. Here is a guideline to help you get started to write Java code in Visual Studio Code.
+Este es un proyecto académico desarrollado para la materia de Programación Orientada a Objetos (POO), cuyo objetivo es implementar un sistema de gestión hospitalaria que permita llevar el control de **Hospitales** y sus **Pacientes**, con operaciones CRUD y base de datos MySQL.
 
-## Folder Structure
+---
 
-The workspace contains two folders by default, where:
+## 📁 Estructura del Proyecto
 
-- `src`: the folder to maintain sources
-- `lib`: the folder to maintain dependencies
+```
+ProyectoPOO/
+│
+├── database/
+│   └── hospital.sql         # Script de la base de datos en MySQL
+├── lib/                     # Librerías externas JavaFX y JPA
+├── src/
+│   ├── controllers/         # Lógica y controladores de la aplicación
+│   ├── META-INF/            # Configuración de persistencia (JPA)
+│   ├── models/              # Clases entidad Hospital y Paciente
+│   ├── styles/              # Archivos CSS para estilizar JavaFX
+│   ├── utils/               # Utilidades adicionales
+│   └── views/               # Interfaces gráficas (FXML o JavaFX)
+├── App.java                 # Clase principal (main)
+├── .gitignore
+└── README.md
+```
 
-Meanwhile, the compiled output files will be generated in the `bin` folder by default.
+---
 
-> If you want to customize the folder structure, open `.vscode/settings.json` and update the related settings there.
+## 💾 Base de Datos
 
-## Dependency Management
+El proyecto utiliza **MySQL** para almacenar la información.  
+Puedes importar el archivo `hospital.sql` desde el directorio `database/` para crear las tablas requeridas. Las restricciones (`CONSTRAINT`) ya están incluidas para mantener la integridad referencial.
 
-The `JAVA PROJECTS` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-dependency#manage-dependencies).
+---
+
+## ⚙️ Tecnologías Utilizadas
+
+- Java 22+
+- JavaFX
+- MySQL
+- JDBC
+- JPA (Java Persistence API)
+- Visual Studio Code
+
+---
+
+## 🔄 Funcionalidades Principales
+
+- Crear, leer, actualizar y eliminar hospitales.
+- Registrar pacientes asociados a un hospital.
+- Validación de datos.
+- Interfaz gráfica con JavaFX.
+- Estilo visual personalizado con CSS.
+- Conexión con base de datos MySQL.
+
+---
+
+## 👨‍💻 Equipo de Desarrollo
+
+Proyecto realizado por un equipo de 6 integrantes como parte de la asignatura POO.  
+
+- *HECTOR BADILLO GARCIA*
+- *MEGAN ARIANET HOWARD*
+- *JUAN MIGUEL REYES RESENDIZ*
+- *CHRISTIAN ISAAC MARTINEZ HERNANDEZ*
+- *MARIA GUADALUPE ALPIZAR ALVAREZ*
+- *LUIS GARCIA CRUZ*
+
+---
+
+## 🚀 ¿Cómo ejecutar el proyecto?
+
+1. Asegúrate de tener Java, MySQL y VS Code instalados.
+2. Clona el repositorio:
+
+```bash
+git clone https://github.com/XzAEiT-Murft/ProyectoPOO.git
+```
+
+3. Importa el archivo `hospital.sql` en tu gestor de bases de datos MySQL.
+4. Abre el proyecto en VS Code.
+5. Ejecuta `App.java` desde el explorador lateral o terminal.
+
+---
+
+## 📝 Licencia
+
+Proyecto académico. Todos los derechos reservados por el equipo Anthsoft (equipo académico temporal).
+
+---
+
+¡Listo para ser evaluado y mejorar! 💙
