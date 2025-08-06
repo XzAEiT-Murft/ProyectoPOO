@@ -98,8 +98,3 @@ Proyecto académico. Todos los derechos reservados por el equipo Anthsoft (equip
 ---
 
 ¡Listo para ser evaluado y mejorar! 💙
-
-
-## Nota
-
-dentro del repositorio hay un archivo llamado `🛠 Instrucciones Generales de Uso` este es un manual de uso general de la app y es un archivo .pdf
