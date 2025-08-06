@@ -77,7 +77,7 @@ Proyecto realizado por un equipo de 6 integrantes como parte de la asignatura PO
 git clone https://github.com/XzAEiT-Murft/ProyectoPOO.git
 ```
 
-3. Importa el archivo `hospital.sql` en tu gestor de bases de datos MySQL.
+3. Importa el archivo `hospital.sql` en tu gestor de bases de datos SQL SERVER.
 4. Abre el proyecto en VS Code.
 5. Ejecuta `App.java` desde el explorador lateral o terminal.
 
