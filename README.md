@@ -35,9 +35,9 @@ Puedes importar el archivo `hospital.sql` desde el directorio `database/` para c
 
 ## ⚙️ Tecnologías Utilizadas
 
-- Java 22+
+- Java 22
 - JavaFX
-- MySQL
+- SQL SERVER
 - JDBC
 - JPA (Java Persistence API)
 - Visual Studio Code
@@ -51,7 +51,7 @@ Puedes importar el archivo `hospital.sql` desde el directorio `database/` para c
 - Validación de datos.
 - Interfaz gráfica con JavaFX.
 - Estilo visual personalizado con CSS.
-- Conexión con base de datos MySQL.
+- Conexión con base de datos SQL SERVER.
 
 ---
 
@@ -70,7 +70,7 @@ Proyecto realizado por un equipo de 6 integrantes como parte de la asignatura PO
 
 ## 🚀 ¿Cómo ejecutar el proyecto?
 
-1. Asegúrate de tener Java, MySQL y VS Code instalados.
+1. Asegúrate de tener Java con el jdk 22, SQL SERVER y VS Code instalados.
 2. Clona el repositorio:
 
 ```bash
@@ -83,6 +83,14 @@ git clone https://github.com/XzAEiT-Murft/ProyectoPOO.git
 
 ---
 
+## 🖇️ Link de la presentacion del proyecto
+
+https://www.canva.com/design/DAGvKW5d9zI/p60B7zc5tEL50NH_B7HPRg/edit?utm_content=DAGvKW5d9zI&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton
+
+---
+
+
+
 ## 📝 Licencia
 
 Proyecto académico. Todos los derechos reservados por el equipo Anthsoft (equipo académico temporal).
@@ -90,3 +98,8 @@ Proyecto académico. Todos los derechos reservados por el equipo Anthsoft (equip
 ---
 
 ¡Listo para ser evaluado y mejorar! 💙
+
+
+## Nota
+
+dentro del repositorio hay un archivo llamado `🛠 Instrucciones Generales de Uso` este es un manual de uso general de la app y es un archivo .pdf
